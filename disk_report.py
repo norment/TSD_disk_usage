@@ -29,11 +29,14 @@ def to_write(G, node, minfiles, minsize, user): # more than 1GiB or 100 files
         else:
             return []
     return _to_write1(G, node, minfiles, minsize, user) if user else _to_write2(G, node, minfiles, minsize)
-    
+def get_root(G, node):
+    if len(list(G.predecessors(node))) == 0:
+        return node
+    else:
+        return get_root(G, G.predecessors(node)[0])
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='A python script to interpret disk usage report for TSD.')
     parser.add_argument('--infile', default='disk_report_latest', type=str, help='Input file, default is raw_report_latest')
-    parser.add_argument('--root', type=str, help='Root folder to aggregate disk usage into')
     parser.add_argument('--out', default=None, type=str, help='Output file, default is stdout')
     parser.add_argument('--minfiles', default=100, type=int, help='minimum file count in directories to include in output, default is 100')
     parser.add_argument('--minsize', default=(1<<30) ,type=int, help='minimum size directories to include in output, default is 1073741824')
@@ -42,14 +45,13 @@ if __name__ == "__main__":
     
     raw = pd.read_csv(args.infile, sep='\t', names='Path User Size Files'.split())
     raw=raw.groupby('Path').agg(list)
-    root = os.path.realpath(args.root)
-    edges = raw.index.map(lambda x: (x.rsplit('/',1)[0] if x.rsplit('/',1)[0] else '/' ,x))[1:]   
+    edges = raw.index.map(lambda x: (x.rsplit('/',1)[0] if x.rsplit('/',1)[0] else '/' ,x))[1:]
     nodes = raw.apply(lambda x: (x.name, ChainMap(*[{x.User[i]+'_Size': x['Size'][i], x.User[i]+'_Files': x['Files'][i]} for i in range(len(x.User))])), axis=1).values
     G = nx.DiGraph()
     G.add_nodes_from(nodes)
     G.add_edges_from(edges)
     assert(nx.is_tree(G))
-    
+    root= get_root(G,next(iter(G.nodes().keys())))
     if args.user == None:
         set_cummulative_weight_all(G, root, 'Size')
         set_cummulative_weight_all(G, root, 'Files')
