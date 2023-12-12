@@ -5,3 +5,9 @@ The script needs to be run with sudo.
 ```
 sudo ./raw_report.sh <root-dir> <threads>
 ```
+
+## disk_report.py
+Usage example:
+```
+python3 disk_report.py --infile p33-disk_report_2023-11-22 --out p33_filetree
+```
