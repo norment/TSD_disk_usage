@@ -7,6 +7,8 @@ sudo ./raw_report.sh <root-dir> <threads>
 ```
 
 ## disk_report.py
+This script aggregates the file created by [raw_report.sh](/raw_report.sh) and creates a human-readable form per each user and for all users.
+
 Usage example:
 ```
 python3 disk_report.py --infile p33-disk_report_2023-11-22 --out p33_filetree
